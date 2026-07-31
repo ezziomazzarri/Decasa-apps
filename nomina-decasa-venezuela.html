@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Nómina Decasa Venezuela</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --pine:#12403C; --pine-d:#0C2E2B; --amber:#E8A13D; --amber-d:#C9821E;
+    --paper:#F4F6F4; --card:#FFFFFF; --ink:#1E2622; --mut:#6B7A74;
+    --line:#DDE5E1; --ok:#1E7B4F; --warn:#C9821E; --bad:#B4362E;
+    --ok-bg:#E4F3EB; --warn-bg:#FBF0DC; --bad-bg:#F9E5E3; --blue:#1F5B8D; --blue-bg:#E4EEF6;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--paper); color:var(--ink); font-size:15px; padding-bottom:90px;}
+  header{background:var(--pine); color:#fff; padding:16px 16px 14px; position:sticky; top:0; z-index:50;}
+  header h1{font-size:17px; font-weight:700; letter-spacing:.3px;}
+  header .sub{font-size:12px; color:#BFD6CE; margin-top:2px;}
+  .wrap{max-width:640px; margin:0 auto; padding:14px;}
+  .tabs{display:flex; gap:6px; margin-bottom:14px;}
+  .tab{flex:1; text-align:center; padding:9px 4px; border-radius:10px; background:#fff; border:1px solid var(--line); font-size:13px; font-weight:600; color:var(--mut); cursor:pointer;}
+  .tab.act{background:var(--pine); color:#fff; border-color:var(--pine);}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px;}
+  .card h2{font-size:13px; text-transform:uppercase; letter-spacing:.8px; color:var(--pine); margin-bottom:10px; font-weight:700;}
+  label{display:block; font-size:12px; color:var(--mut); margin-bottom:4px; font-weight:600;}
+  input[type=number], input[type=date], input[type=text], select{width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:16px; background:#FBFCFB; color:var(--ink); -webkit-appearance:none;}
+  input:focus, select:focus{outline:2px solid var(--amber); border-color:var(--amber);}
+  .row{display:flex; gap:10px;}
+  .row > div{flex:1;}
+  .row3{display:flex; gap:8px;}
+  .row3 > div{flex:1;}
+  .emp{border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px; background:#FBFCFB;}
+  .emp .head{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:4px;}
+  .emp .name{font-weight:700; font-size:15px;}
+  .badge{font-size:10px; font-weight:700; padding:3px 8px; border-radius:20px; background:var(--amber); color:#fff; letter-spacing:.3px;}
+  .btn{display:block; width:100%; padding:13px; border:none; border-radius:12px; background:var(--pine); color:#fff; font-size:15px; font-weight:700; cursor:pointer; margin-top:6px;}
+  .btn.amber{background:var(--amber-d);}
+  .btn.ghost{background:#fff; color:var(--pine); border:1px solid var(--pine);}
+  .btn.red{background:var(--bad);}
+  .btn.sm{padding:8px 12px; font-size:13px; width:auto; display:inline-block; margin:0;}
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  th{text-align:left; color:var(--mut); font-size:10px; text-transform:uppercase; letter-spacing:.4px; padding:6px 3px; border-bottom:2px solid var(--line);}
+  td{padding:8px 3px; border-bottom:1px solid var(--line);}
+  td.num, th.num{text-align:right; font-variant-numeric:tabular-nums;}
+  tr.total td{font-weight:800; font-size:14px; border-top:2px solid var(--pine); border-bottom:none;}
+  .neg{color:var(--bad);}
+  .pos{color:var(--ok);}
+  .gauge-wrap{margin-top:10px;}
+  .gauge-labels{display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;}
+  .gauge{height:16px; background:#E7ECE9; border-radius:20px; overflow:hidden;}
+  .gauge .fill{height:100%; border-radius:20px; transition:width .5s ease; min-width:8px;}
+  .verdict{margin-top:10px; padding:10px 12px; border-radius:10px; font-size:13px; font-weight:600; line-height:1.5;}
+  .v-ok{background:var(--ok-bg); color:var(--ok);}
+  .v-warn{background:var(--warn-bg); color:var(--warn);}
+  .v-bad{background:var(--bad-bg); color:var(--bad);}
+  .v-blue{background:var(--blue-bg); color:var(--blue);}
+  .kpis{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
+  .kpi{flex:1; min-width:90px; background:#FBFCFB; border:1px solid var(--line); border-radius:10px; padding:8px 10px; text-align:center;}
+  .kpi .v{font-size:16px; font-weight:800; font-variant-numeric:tabular-nums;}
+  .kpi .l{font-size:10px; color:var(--mut); text-transform:uppercase; letter-spacing:.4px; margin-top:2px;}
+  .sticky-total{position:fixed; bottom:0; left:0; right:0; background:var(--pine-d); color:#fff; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; z-index:60;}
+  .sticky-total .lbl{font-size:11px; color:#9FC4B8; text-transform:uppercase; letter-spacing:.6px;}
+  .sticky-total .amt{font-size:22px; font-weight:800; font-variant-numeric:tabular-nums;}
+  .sticky-total .pct{text-align:right;}
+  .hist-item{border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px; background:#fff;}
+  .hist-item .top{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+  .hist-item .dates{font-weight:700;}
+  .hist-item .tot{font-weight:800; color:var(--pine);}
+  .hist-item .meta{font-size:12px; color:var(--mut); margin-bottom:8px; line-height:1.5;}
+  .hist-btns{display:flex; gap:8px;}
+  .empty{text-align:center; color:var(--mut); padding:30px 10px; font-size:14px;}
+  .hide{display:none;}
+  .cfg-emp{border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:12px; background:#FBFCFB;}
+  .cfg-emp h3{font-size:14px; margin-bottom:8px; color:var(--pine);}
+  .cfg-grid{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;}
+  .cfg-grid > div{flex:1; min-width:70px;}
+  .note{font-size:12px; color:var(--mut); margin-top:8px; line-height:1.6;}
+  .chip{display:inline-block; font-size:11px; background:#E7ECE9; color:var(--pine); border-radius:6px; padding:2px 7px; margin-left:6px; font-weight:700;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Nómina · Decasa Venezuela</h1>
+  <div class="sub">Nómina semanal + análisis cambiario BCV vs USDT/EUR</div>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab act" id="tabCalc" onclick="showTab('calc')">Calcular</div>
+    <div class="tab" id="tabHist" onclick="showTab('hist')">Historial</div>
+    <div class="tab" id="tabCfg" onclick="showTab('cfg')">Config</div>
+  </div>
+
+  <!-- ============ TAB CALCULAR ============ -->
+  <div id="pgCalc">
+    <div class="card">
+      <h2>Semana</h2>
+      <div class="row">
+        <div><label>Desde</label><input type="date" id="fDesde"></div>
+        <div><label>Hasta</label><input type="date" id="fHasta"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Datos del Saint — ventas y tasas</h2>
+      <label>Venta que reporta Saint ($)</label>
+      <input type="number" id="ventaSaint" inputmode="decimal" placeholder="0.00" oninput="calc()">
+      <div style="height:10px"></div>
+      <label>Costo de productos ($ real gastado en reposición)</label>
+      <input type="number" id="costoSaint" inputmode="decimal" placeholder="0.00" oninput="calc()">
+      <div style="height:10px"></div>
+      <label>Utilidad % que calcula Saint</label>
+      <input type="number" id="utilPctSaint" inputmode="decimal" placeholder="30" oninput="calc()">
+      <div style="height:10px"></div>
+      <div class="row">
+        <div><label>Tasa BCV promedio</label><input type="number" id="tasaBCV" inputmode="decimal" placeholder="0.00" oninput="calc()"></div>
+        <div><label>Tasa USDT promedio</label><input type="number" id="tasaUSDT" inputmode="decimal" placeholder="0.00" oninput="calc()"></div>
+      </div>
+      <div class="kpis" id="fxKpis"></div>
+      <div class="verdict v-blue" id="fxVerdict">Ingresa venta Saint, costo y tasas para ver la ganancia real.</div>
+    </div>
+
+
+
+    <div class="card">
+      <h2>Empleados</h2>
+      <div id="empInputs"></div>
+      <div class="note">Cada falta descuenta <b>3 días</b> de sueldo (el día + 2 adicionales). El campo <b>Bono manual</b> es para pagos puntuales (ej: ayudar a Diego con entregas).</div>
+    </div>
+
+    <div class="card" id="resultCard">
+      <h2>Resultado nómina</h2>
+      <div style="overflow-x:auto;">
+      <table id="resTable">
+        <thead><tr>
+          <th>Empleado</th><th class="num">Base</th><th class="num">Faltas</th><th class="num">Com.G</th><th class="num">Com.P</th><th class="num">Extras</th><th class="num">Total</th>
+        </tr></thead>
+        <tbody id="resBody"></tbody>
+      </table>
+      </div>
+      <div class="gauge-wrap">
+        <div class="gauge-labels"><span><b>Nómina vs Utilidad Saint</b></span><span id="gaugePct" style="font-weight:800;">—</span></div>
+        <div class="gauge"><div class="fill" id="gaugeFill" style="width:0%; background:var(--ok);"></div></div>
+        <div class="gauge-labels" style="margin-top:8px;"><span><b>Nómina vs Utilidad REAL (ajustada por brecha)</b></span><span id="gaugePct2" style="font-weight:800;">—</span></div>
+        <div class="gauge"><div class="fill" id="gaugeFill2" style="width:0%; background:var(--ok);"></div></div>
+        <div class="verdict v-ok" id="verdict">Ingresa la utilidad del Saint para ver el análisis.</div>
+      </div>
+      <button class="btn" onclick="guardarSemana()">💾 Guardar semana</button>
+      <button class="btn amber" onclick="pdfSemana(null)">📄 Exportar PDF</button>
+      <button class="btn ghost" onclick="limpiar()">Limpiar campos</button>
+    </div>
+  </div>
+
+  <!-- ============ TAB HISTORIAL ============ -->
+  <div id="pgHist" class="hide">
+    <div class="card">
+      <h2>Semanas guardadas</h2>
+      <div id="histList"></div>
+    </div>
+    <div class="card">
+      <h2>Respaldo</h2>
+      <button class="btn ghost" onclick="backupJSON()">⬇️ Descargar respaldo JSON</button>
+      <label style="margin-top:10px;">Restaurar respaldo</label>
+      <input type="file" id="restoreFile" accept=".json" onchange="restoreJSON(event)">
+    </div>
+  </div>
+
+  <!-- ============ TAB CONFIG ============ -->
+  <div id="pgCfg" class="hide">
+    <div class="card">
+      <h2>Empleados, comisiones y bonos</h2>
+      <div id="cfgList"></div>
+      <div class="note">
+        <b>Com. Gral %</b> = sobre la venta general de la tienda.<br>
+        <b>Com. Prop %</b> = sobre la venta individual del empleado.<br>
+        <b>Bono fijo</b> = pago fijo semanal por responsabilidades (fotos, redes, ingreso de mercancía).<br>
+        <b>Comisión especial</b> = tarea extra medible: <b>% sobre monto</b> (ej: 10% del tax Amazon recuperado, 1% extra de ventas internet) o <b>$ por unidad</b> (ej: $0.75 por delivery).
+      </div>
+      <button class="btn" onclick="guardarConfig()">Guardar configuración</button>
+      <button class="btn ghost" onclick="resetConfig()">Restaurar valores originales</button>
+    </div>
+  </div>
+</div>
+
+<div class="sticky-total">
+  <div>
+    <div class="lbl">Total nómina</div>
+    <div class="amt" id="stickyTotal">$0.00</div>
+  </div>
+  <div class="pct">
+    <div class="lbl">% util. real</div>
+    <div class="amt" id="stickyPct">—</div>
+  </div>
+</div>
+
+<script>
+const LS_CFG = 'nominaDecasa_cfg_v2';
+const LS_HIST = 'nominaDecasa_hist_v2';
+
+const DEFAULT_CFG = [
+  {nombre:'Dori',    diario:8, dias:7, comGral:0.5, comProp:1, bonoFijo:5,
+   extras:[{tipo:'pct', nombre:'Tax Amazon recuperado', valor:10, unidadLbl:'$ recuperado'}]},
+  {nombre:'Lusmar',  diario:8, dias:7, comGral:0.5, comProp:1, bonoFijo:0,
+   extras:[{tipo:'pct', nombre:'Ventas internet (extra)', valor:1, unidadLbl:'$ ventas web'},
+           {tipo:'pct', nombre:'Flete compras USA', valor:4, unidadLbl:'$ flete generado'}]},
+  {nombre:'Diego',   diario:6, dias:7, comGral:0,   comProp:1, bonoFijo:0,
+   extras:[{tipo:'unit', nombre:'Deliveries', valor:0.75, unidadLbl:'N° entregas'}]},
+  {nombre:'Yasmin',  diario:6, dias:7, comGral:0,   comProp:1, bonoFijo:0, extras:[]},
+  {nombre:'Armando', diario:6, dias:7, comGral:0,   comProp:1, bonoFijo:0, extras:[]},
+];
+const MAX_EXTRAS = 2;
+const DIAS_DESC_POR_FALTA = 3;
+
+function r2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
+function fmt(n){ return '$' + r2(n).toFixed(2); }
+function fmtBs(n){ return 'Bs ' + r2(n).toLocaleString('es-VE',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+function getCfg(){
+  try{
+    const c = JSON.parse(localStorage.getItem(LS_CFG));
+    if(Array.isArray(c) && c.length){
+      // Compatibilidad: convierte formato viejo (extra único) a lista de extras
+      c.forEach(e=>{
+        if(!Array.isArray(e.extras)){
+          e.extras = (e.extra && e.extra.tipo && e.extra.tipo!=='none') ? [e.extra] : [];
+        }
+        delete e.extra;
+      });
+      return c;
+    }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_CFG));
+}
+function getHist(){
+  try{
+    const h = JSON.parse(localStorage.getItem(LS_HIST));
+    if(Array.isArray(h)) return h;
+  }catch(e){}
+  return [];
+}
+
+/* ---------- TABS ---------- */
+function showTab(t){
+  document.getElementById('pgCalc').classList.toggle('hide', t!=='calc');
+  document.getElementById('pgHist').classList.toggle('hide', t!=='hist');
+  document.getElementById('pgCfg').classList.toggle('hide', t!=='cfg');
+  document.getElementById('tabCalc').classList.toggle('act', t==='calc');
+  document.getElementById('tabHist').classList.toggle('act', t==='hist');
+  document.getElementById('tabCfg').classList.toggle('act', t==='cfg');
+  if(t==='hist') renderHist();
+  if(t==='cfg') renderCfg();
+}
+
+/* ---------- INPUTS EMPLEADOS ---------- */
+function renderEmpInputs(){
+  const cfg = getCfg();
+  let html = '';
+  cfg.forEach((e,i)=>{
+    const comTxt = e.comGral>0 ? `${e.comGral}% gral + ${e.comProp}% propia` : `${e.comProp}% propia`;
+    let extraInputs = '';
+    (e.extras||[]).forEach((ex,j)=>{
+      extraInputs += `<div><label>${ex.nombre} (${ex.unidadLbl})</label>
+        <input type="number" inputmode="decimal" id="extra_${i}_${j}" placeholder="0" oninput="calc()"></div>`;
+    });
+    html += `
+    <div class="emp">
+      <div class="head">
+        <div>
+          <span class="name">${e.nombre}</span>
+          <span class="chip">$${e.diario}/día · ${e.dias}d${e.bonoFijo>0? ' · bono $'+e.bonoFijo : ''}</span>
+        </div>
+        <span class="badge">${comTxt}</span>
+      </div>
+      <div class="row">
+        <div><label>Venta individual ($)</label>
+          <input type="number" inputmode="decimal" id="venta_${i}" placeholder="0.00" oninput="calc()"></div>
+        <div style="max-width:100px;"><label>Faltas</label>
+          <input type="number" inputmode="numeric" id="faltas_${i}" placeholder="0" min="0" oninput="calc()"></div>
+      </div>
+      <div class="row" style="margin-top:8px; flex-wrap:wrap;">
+        ${extraInputs}
+        <div><label>Bono manual ($)</label>
+          <input type="number" inputmode="decimal" id="bono_${i}" placeholder="0.00" oninput="calc()"></div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('empInputs').innerHTML = html;
+}
+
+/* ---------- ANÁLISIS CAMBIARIO ---------- */
+function calcularFX(){
+  const ventaSaint = parseFloat(document.getElementById('ventaSaint').value) || 0;
+  const costo = parseFloat(document.getElementById('costoSaint').value) || 0;
+  const utilPct = parseFloat(document.getElementById('utilPctSaint').value) || 0;
+  const bcv = parseFloat(document.getElementById('tasaBCV').value) || 0;
+  const usdt = parseFloat(document.getElementById('tasaUSDT').value) || 0;
+  
+  if(ventaSaint<=0 || costo<0 || bcv<=0 || usdt<=0) return null;
+  
+  const utilidadSaint = r2(ventaSaint * (utilPct / 100));
+  const ventaReal = r2((ventaSaint * bcv) / usdt);
+  const gananciaReal = r2(ventaReal - costo);
+  const utilidadPctReal = ventaReal > 0 ? r2((gananciaReal / ventaReal) * 100) : 0;
+  const perdida = r2(ventaSaint - ventaReal);
+  const pctPerdida = ventaSaint > 0 ? r2((perdida / ventaSaint) * 100) : 0;
+  
+  return {ventaSaint, costo, utilPct, bcv, usdt, utilidadSaint, ventaReal, gananciaReal, utilidadPctReal, perdida, pctPerdida};
+}
+
+/* ---------- CÁLCULO NÓMINA ---------- */
+function calcular(){
+  const cfg = getCfg();
+  const fx = calcularFX();
+  const vg = parseFloat(document.getElementById('ventaSaint').value) || 0;
+  const filas = [];
+  let total = 0;
+  cfg.forEach((e,i)=>{
+    const ventaProp = parseFloat((document.getElementById('venta_'+i)||{}).value) || 0;
+    const faltas = parseInt((document.getElementById('faltas_'+i)||{}).value) || 0;
+    const bonoManual = parseFloat((document.getElementById('bono_'+i)||{}).value) || 0;
+    let extraCalc = 0;
+    const extrasDet = [];
+    const extraBases = [];
+    (e.extras||[]).forEach((ex,j)=>{
+      const baseVal = parseFloat((document.getElementById('extra_'+i+'_'+j)||{}).value) || 0;
+      extraBases.push(baseVal);
+      let c = 0;
+      if(ex.tipo === 'pct') c = r2(baseVal * ex.valor / 100);
+      if(ex.tipo === 'unit') c = r2(baseVal * ex.valor);
+      if(c > 0) extrasDet.push({nombre:ex.nombre, calc:c});
+      extraCalc = r2(extraCalc + c);
+    });
+    const base = e.diario * e.dias;
+    const desc = Math.min(base, faltas * DIAS_DESC_POR_FALTA * e.diario);
+    const comGral = r2(vg * e.comGral / 100);
+    const comProp = r2(ventaProp * e.comProp / 100);
+    const extras = r2((e.bonoFijo||0) + extraCalc + bonoManual);
+    const pago = Math.max(0, r2(base - desc + comGral + comProp + extras));
+    total = r2(total + pago);
+    filas.push({nombre:e.nombre, base, desc, comGral, comProp, extras, bonoFijo:e.bonoFijo||0, extraBases, extrasDet, extraCalc, bonoManual, faltas, ventaProp, pago});
+  });
+  const pct = fx && fx.gananciaReal > 0 ? r2(total / fx.gananciaReal * 100) : null;
+  return {filas, total, vg, pct, fx};
+}
+
+function setGauge(fillId, pctId, p){
+  const gf = document.getElementById(fillId);
+  const gp = document.getElementById(pctId);
+  if(p === null || p === undefined || isNaN(p)){
+    gp.textContent = '—'; gf.style.width='0%'; return;
+  }
+  gp.textContent = p.toFixed(1) + '%';
+  gf.style.width = Math.min(100, Math.max(0,p)) + '%';
+  gf.style.background = p<=30? 'var(--ok)' : p<=50? 'var(--warn)' : 'var(--bad)';
+}
+
+function calc(){
+  const R = calcular();
+  let html = '';
+  R.filas.forEach(f=>{
+    html += `<tr>
+      <td>${f.nombre}</td>
+      <td class="num">${fmt(f.base)}</td>
+      <td class="num ${f.desc>0?'neg':''}">${f.desc>0? '-'+fmt(f.desc).slice(1) : '—'}</td>
+      <td class="num">${f.comGral>0? fmt(f.comGral) : '—'}</td>
+      <td class="num">${fmt(f.comProp)}</td>
+      <td class="num ${f.extras>0?'pos':''}">${f.extras>0? fmt(f.extras) : '—'}</td>
+      <td class="num"><b>${fmt(f.pago)}</b></td>
+    </tr>`;
+  });
+  html += `<tr class="total"><td>TOTAL</td><td></td><td></td><td></td><td></td><td></td><td class="num">${fmt(R.total)}</td></tr>`;
+  document.getElementById('resBody').innerHTML = html;
+  document.getElementById('stickyTotal').textContent = fmt(R.total);
+
+  // FX card
+  const kp = document.getElementById('fxKpis');
+  const fv = document.getElementById('fxVerdict');
+  if(R.fx){
+    kp.innerHTML = `
+      <div class="kpi"><div class="v">${fmt(R.fx.ventaSaint)}</div><div class="l">Venta Saint</div></div>
+      <div class="kpi"><div class="v">${R.fx.utilPct.toFixed(1)}%</div><div class="l">Util. Saint</div></div>
+      <div class="kpi"><div class="v">${fmt(R.fx.ventaReal)}</div><div class="l">Venta real</div></div>
+      <div class="kpi"><div class="v" style="color:var(--ok);">${R.fx.utilidadPctReal.toFixed(1)}%</div><div class="l">Util. real</div></div>`;
+    fv.className = 'verdict v-blue';
+    fv.innerHTML = `Tasas: BCV <b>${R.fx.bcv}</b> vs USDT <b>${R.fx.usdt}</b>. Ganancia real: <b>${fmt(R.fx.gananciaReal)}</b> (${R.fx.utilidadPctReal.toFixed(1)}% de la venta real). Pérdida por brecha: <b>${fmt(R.fx.perdida)}</b> (${R.fx.pctPerdida.toFixed(1)}%).`;
+  } else {
+    kp.innerHTML = '';
+    fv.className = 'verdict v-blue';
+    fv.textContent = 'Ingresa venta Saint, costo y tasas para ver la ganancia real.';
+  }
+
+  // Gauges
+  setGauge('gaugeFill','gaugePct', R.pct);
+  document.getElementById('stickyPct').textContent = R.pct !== null ? R.pct.toFixed(1)+'%' : '—';
+  
+  // Hide second gauge since we only have one now
+  document.getElementById('gaugeFill2').parentElement.parentElement.style.display = 'none';
+
+  const vd = document.getElementById('verdict');
+  if(R.pct !== null && R.fx){
+    const p = R.pct;
+    const resto = r2(R.fx.gananciaReal - R.total);
+    let cls, msg;
+    if(R.fx.gananciaReal <= 0){
+      cls='v-bad'; msg=`🚨 Crítico: la ganancia real es ${fmt(R.fx.gananciaReal)} (venta real ${fmt(R.fx.ventaReal)} − costo ${fmt(R.fx.costo)}). La nómina de ${fmt(R.total)} sale de tu bolsillo.`;
+    }
+    else if(p <= 30){ cls='v-ok'; msg=`✅ Sano: la nómina consume ${p.toFixed(1)}% de tu ganancia real. Después de pagar te quedan ${fmt(resto)}.`; }
+    else if(p <= 50){ cls='v-warn'; msg=`⚠️ Atención: la nómina consume ${p.toFixed(1)}% de tu ganancia real. Después de pagar te quedan ${fmt(resto)}.`; }
+    else if(p <= 100){ cls='v-bad'; msg=`🔴 Alto: la nómina consume ${p.toFixed(1)}% de tu ganancia real. Solo te quedan ${fmt(resto)}.`; }
+    else { cls='v-bad'; msg=`🚨 Crítico: la nómina (${fmt(R.total)}) supera tu ganancia real (${fmt(R.fx.gananciaReal)}). Pierdes ${fmt(Math.abs(resto))}.`; }
+    vd.className = 'verdict ' + cls;
+    vd.textContent = msg;
+  } else {
+    vd.className = 'verdict v-ok';
+    vd.textContent = 'Ingresa venta Saint, costo y tasas para ver el análisis de nómina.';
+  }
+}
+
+/* ---------- GUARDAR / HISTORIAL ---------- */
+function guardarSemana(){
+  const d = document.getElementById('fDesde').value;
+  const h = document.getElementById('fHasta').value;
+  if(!d || !h){ alert('Selecciona las fechas de la semana (Desde / Hasta).'); return; }
+  const R = calcular();
+  if(R.total === 0){ alert('No hay datos que guardar.'); return; }
+  const hist = getHist();
+  const rec = {id:Date.now(), desde:d, hasta:h, ventaSaint:R.vg,
+    pct:R.pct, total:R.total, filas:R.filas, fx:R.fx};
+  hist.unshift(rec);
+  localStorage.setItem(LS_HIST, JSON.stringify(hist));
+  alert('Semana guardada ✔');
+  showTab('hist');
+}
+
+function renderHist(){
+  const hist = getHist();
+  const el = document.getElementById('histList');
+  if(!hist.length){ el.innerHTML = '<div class="empty">No hay semanas guardadas todavía.</div>'; return; }
+  let html = '';
+  hist.forEach(r=>{
+    const gananciaRealTxt = r.fx && r.fx.gananciaReal !== undefined ? ` · Ganancia real: ${fmt(r.fx.gananciaReal)} (${r.fx.utilidadPctReal.toFixed(1)}%)` : '';
+    const pctTxt = r.pct!==null? r.pct.toFixed(1)+'% ganancia' : '—';
+    html += `<div class="hist-item">
+      <div class="top">
+        <span class="dates">${fmtFecha(r.desde)} → ${fmtFecha(r.hasta)}</span>
+        <span class="tot">${fmt(r.total)}</span>
+      </div>
+      <div class="meta">Venta Saint: ${fmt(r.ventaSaint)}${gananciaRealTxt} · Nómina: ${pctTxt}</div>
+      <div class="hist-btns">
+        <button class="btn sm amber" onclick="pdfSemana(${r.id})">📄 PDF</button>
+        <button class="btn sm ghost" onclick="cargarSemana(${r.id})">Ver / Editar</button>
+        <button class="btn sm red" onclick="borrarSemana(${r.id})">Borrar</button>
+      </div>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function fmtFecha(s){
+  if(!s) return '';
+  const [y,m,d] = s.split('-');
+  return `${d}/${m}/${y.slice(2)}`;
+}
+
+function cargarSemana(id){
+  const r = getHist().find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('fDesde').value = r.desde;
+  document.getElementById('fHasta').value = r.hasta;
+  document.getElementById('ventaSaint').value = r.ventaSaint || '';
+  if(r.fx){
+    document.getElementById('costoSaint').value = r.fx.costo || '';
+    document.getElementById('utilPctSaint').value = r.fx.utilPct || '';
+    document.getElementById('tasaBCV').value = r.fx.bcv || '';
+    document.getElementById('tasaUSDT').value = r.fx.usdt || '';
+  }
+  const cfg = getCfg();
+  cfg.forEach((e,i)=>{
+    const f = r.filas.find(x=>x.nombre===e.nombre);
+    document.getElementById('venta_'+i).value = f ? (f.ventaProp||'') : '';
+    document.getElementById('faltas_'+i).value = f && f.faltas ? f.faltas : '';
+    const be = document.getElementById('bono_'+i);
+    if(be) be.value = f && f.bonoManual ? f.bonoManual : '';
+    (e.extras||[]).forEach((ex,j)=>{
+      const ee = document.getElementById('extra_'+i+'_'+j);
+      if(!ee) return;
+      if(f && Array.isArray(f.extraBases)) ee.value = f.extraBases[j] || '';
+      else if(f && j===0 && f.extraBase) ee.value = f.extraBase; // compat semanas viejas
+      else ee.value = '';
+    });
+  });
+  showTab('calc');
+  calc();
+  window.scrollTo(0,0);
+}
+
+function borrarSemana(id){
+  if(!confirm('¿Borrar esta semana del historial?')) return;
+  const hist = getHist().filter(x=>x.id!==id);
+  localStorage.setItem(LS_HIST, JSON.stringify(hist));
+  renderHist();
+}
+
+/* ---------- CONFIG ---------- */
+function renderCfg(){
+  const cfg = getCfg();
+  let html = '';
+  cfg.forEach((e,i)=>{
+    let extrasHtml = '';
+    for(let j=0; j<MAX_EXTRAS; j++){
+      const ex = (e.extras||[])[j] || {tipo:'none', nombre:'', valor:0};
+      extrasHtml += `
+      <label>Comisión especial ${j+1}</label>
+      <div class="cfg-grid">
+        <div style="flex:1.2;">
+          <select id="c_et_${i}_${j}">
+            <option value="none" ${ex.tipo==='none'?'selected':''}>Ninguna</option>
+            <option value="pct" ${ex.tipo==='pct'?'selected':''}>% sobre monto</option>
+            <option value="unit" ${ex.tipo==='unit'?'selected':''}>$ por unidad</option>
+          </select>
+        </div>
+        <div style="flex:1.6;"><input type="text" id="c_en_${i}_${j}" value="${ex.nombre}" placeholder="Nombre (ej: Flete compras USA)"></div>
+        <div><input type="number" inputmode="decimal" id="c_ev_${i}_${j}" value="${ex.valor}" placeholder="Valor"></div>
+      </div>`;
+    }
+    html += `<div class="cfg-emp">
+      <h3>${e.nombre}</h3>
+      <div class="cfg-grid">
+        <div style="flex:1.4;"><label>Nombre</label><input type="text" id="c_nom_${i}" value="${e.nombre}"></div>
+        <div><label>$/día</label><input type="number" inputmode="decimal" id="c_dia_${i}" value="${e.diario}"></div>
+        <div><label>Días</label><input type="number" inputmode="numeric" id="c_dds_${i}" value="${e.dias}"></div>
+      </div>
+      <div class="cfg-grid">
+        <div><label>Com. Gral %</label><input type="number" inputmode="decimal" id="c_cg_${i}" value="${e.comGral}"></div>
+        <div><label>Com. Prop %</label><input type="number" inputmode="decimal" id="c_cp_${i}" value="${e.comProp}"></div>
+        <div><label>Bono fijo $/sem</label><input type="number" inputmode="decimal" id="c_bf_${i}" value="${e.bonoFijo||0}"></div>
+      </div>
+      ${extrasHtml}
+    </div>`;
+  });
+  document.getElementById('cfgList').innerHTML = html;
+}
+
+function guardarConfig(){
+  const cfg = getCfg();
+  const nuevo = cfg.map((e,i)=>{
+    const extras = [];
+    for(let j=0; j<MAX_EXTRAS; j++){
+      const tipo = document.getElementById('c_et_'+i+'_'+j).value;
+      const nombreEx = document.getElementById('c_en_'+i+'_'+j).value.trim();
+      const valorEx = parseFloat(document.getElementById('c_ev_'+i+'_'+j).value) || 0;
+      if(tipo !== 'none' && nombreEx && valorEx > 0){
+        extras.push({tipo, nombre:nombreEx, valor:valorEx,
+          unidadLbl: tipo==='pct' ? '$ monto' : 'Cantidad'});
+      }
+    }
+    return {
+      nombre: document.getElementById('c_nom_'+i).value.trim() || e.nombre,
+      diario: parseFloat(document.getElementById('c_dia_'+i).value) || 0,
+      dias:   parseInt(document.getElementById('c_dds_'+i).value) || 7,
+      comGral:parseFloat(document.getElementById('c_cg_'+i).value) || 0,
+      comProp:parseFloat(document.getElementById('c_cp_'+i).value) || 0,
+      bonoFijo:parseFloat(document.getElementById('c_bf_'+i).value) || 0,
+      extras
+    };
+  });
+  localStorage.setItem(LS_CFG, JSON.stringify(nuevo));
+  renderEmpInputs();
+  calc();
+  alert('Configuración guardada ✔');
+}
+
+function resetConfig(){
+  if(!confirm('¿Restaurar los sueldos, comisiones y bonos originales?')) return;
+  localStorage.removeItem(LS_CFG);
+  renderCfg();
+  renderEmpInputs();
+  calc();
+}
+
+/* ---------- PDF ---------- */
+function pdfSemana(id){
+  let R, desde, hasta;
+  if(id){
+    const r = getHist().find(x=>x.id===id);
+    if(!r) return;
+    R = {filas:r.filas, total:r.total, vg:r.ventaSaint, pct:r.pct, fx:r.fx};
+    desde = r.desde; hasta = r.hasta;
+  } else {
+    R = calcular();
+    desde = document.getElementById('fDesde').value;
+    hasta = document.getElementById('fHasta').value;
+    if(R.total === 0){ alert('No hay datos para el PDF.'); return; }
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const W = doc.internal.pageSize.getWidth();
+  let y;
+
+  doc.setFillColor(18,64,60);
+  doc.rect(0,0,W,26,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(15); doc.setFont(undefined,'bold');
+  doc.text('NÓMINA SEMANAL — DECASA VENEZUELA', W/2, 11, {align:'center'});
+  doc.setFontSize(10); doc.setFont(undefined,'normal');
+  doc.text(`Semana: ${fmtFecha(desde)} al ${fmtFecha(hasta)}   ·   Valores en USD`, W/2, 19, {align:'center'});
+
+  y = 36;
+  doc.setTextColor(30,38,34);
+  doc.setFontSize(10);
+  if(R.fx){
+    doc.text(`Venta Saint: ${fmt(R.fx.ventaSaint)}  ·  Costo: ${fmt(R.fx.costo)}  ·  Ganancia Real: ${fmt(R.fx.gananciaReal)}`, 14, y);
+    y += 8;
+    doc.setFontSize(9);
+    doc.text(`BCV ${R.fx.bcv} vs USDT ${R.fx.usdt}  ·  Pérdida por brecha: ${fmt(R.fx.perdida)}`, 14, y);
+  } else {
+    doc.text(`Venta: ${fmt(R.vg)}`, 14, y);
+  }
+  y += 10;
+
+  const cols = [
+    {t:'Empleado', x:14, a:'left'},
+    {t:'Base', x:58, a:'right'},
+    {t:'Faltas', x:82, a:'right'},
+    {t:'Com.Gral', x:108, a:'right'},
+    {t:'Com.Prop', x:134, a:'right'},
+    {t:'Extras', x:160, a:'right'},
+    {t:'Total', x:194, a:'right'},
+  ];
+  doc.setFillColor(232,236,233);
+  doc.rect(12, y-5, W-24, 8, 'F');
+  doc.setFont(undefined,'bold'); doc.setFontSize(8.5);
+  cols.forEach(c=> doc.text(c.t, c.x, y, {align:c.a}));
+  y += 8;
+  doc.setFont(undefined,'normal'); doc.setFontSize(9.5);
+  R.filas.forEach(f=>{
+    doc.text(f.nombre + (f.faltas>0? ` (${f.faltas}F)` : ''), 14, y);
+    doc.text(fmt(f.base), 58, y, {align:'right'});
+    if(f.desc>0){ doc.setTextColor(180,54,46); doc.text('-'+fmt(f.desc).slice(1), 82, y, {align:'right'}); doc.setTextColor(30,38,34); }
+    else doc.text('—', 82, y, {align:'right'});
+    doc.text(f.comGral>0? fmt(f.comGral):'—', 108, y, {align:'right'});
+    doc.text(fmt(f.comProp), 134, y, {align:'right'});
+    doc.text(f.extras>0? fmt(f.extras):'—', 160, y, {align:'right'});
+    doc.setFont(undefined,'bold');
+    doc.text(fmt(f.pago), 194, y, {align:'right'});
+    doc.setFont(undefined,'normal');
+    y += 7;
+    // Detalle de extras
+    const det = [];
+    if(f.bonoFijo>0) det.push(`bono fijo ${fmt(f.bonoFijo)}`);
+    if(Array.isArray(f.extrasDet) && f.extrasDet.length)
+      f.extrasDet.forEach(d=> det.push(`${d.nombre} ${fmt(d.calc)}`));
+    else if(f.extraCalc>0) det.push(`especial ${fmt(f.extraCalc)}`);
+    if(f.bonoManual>0) det.push(`manual ${fmt(f.bonoManual)}`);
+    if(det.length){
+      doc.setFontSize(7.5); doc.setTextColor(107,122,116);
+      doc.text('Extras: ' + det.join(' + '), 18, y-1.5);
+      doc.setFontSize(9.5); doc.setTextColor(30,38,34);
+      y += 4;
+    }
+  });
+  y += 2;
+  doc.setDrawColor(18,64,60); doc.setLineWidth(0.6);
+  doc.line(12, y-6, W-12, y-6);
+  doc.setFont(undefined,'bold'); doc.setFontSize(12);
+  doc.text('TOTAL NÓMINA', 14, y+2);
+  doc.text(fmt(R.total), 194, y+2, {align:'right'});
+  y += 14;
+
+  // Análisis cambiario
+  if(R.fx){
+    doc.setFillColor(228,238,246);
+    doc.roundedRect(12, y-4, W-24, 32, 2, 2, 'F');
+    doc.setTextColor(31,91,141);
+    doc.setFontSize(9); doc.setFont(undefined,'bold');
+    doc.text('CONVERSIÓN SAINT A USD REAL', 16, y+2);
+    doc.setFont(undefined,'normal'); doc.setFontSize(9);
+    doc.text(`Venta Saint: ${fmt(R.fx.ventaSaint)}  ·  Saint dice utilidad ${R.fx.utilPct}%: ${fmt(R.fx.utilidadSaint)}`, 16, y+9);
+    doc.text(`Tasas BCV ${R.fx.bcv} vs USDT ${R.fx.usdt}  →  Venta real: ${fmt(R.fx.ventaReal)}  ·  Costo: ${fmt(R.fx.costo)}`, 16, y+16);
+    doc.text(`Ganancia real: ${fmt(R.fx.gananciaReal)}  ·  Utilidad real: ${R.fx.utilidadPctReal.toFixed(1)}%  ·  Pérdida brecha: ${fmt(R.fx.perdida)}`, 16, y+23);
+    y += 36;
+  }
+
+  // Veredicto
+  if(R.pct !== null && R.fx){
+    const ganancia = R.fx.gananciaReal;
+    const col = R.pct<=30? [30,123,79] : R.pct<=50? [201,130,30] : [180,54,46];
+    doc.setFillColor(col[0],col[1],col[2]);
+    doc.roundedRect(12, y-4, W-24, 16, 2, 2, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(9.5);
+    const restante = r2(ganancia - R.total);
+    doc.text(`La nómina consume el ${R.pct.toFixed(1)}% de la ganancia real (${fmt(ganancia)}). ${restante>=0? 'Te quedan '+fmt(restante)+' después de pagar.' : 'PÉRDIDA de '+fmt(Math.abs(restante))+'.'}`, W/2, y+5, {align:'center'});
+    y += 22;
+  }
+
+  doc.setTextColor(120,130,125);
+  doc.setFontSize(8);
+  doc.text(`Generado ${new Date().toLocaleDateString('es-VE')} · Cada falta descuenta 3 días de sueldo`, W/2, 285, {align:'center'});
+
+  doc.save(`Nomina_Decasa_${desde||'semana'}.pdf`);
+}
+
+/* ---------- BACKUP ---------- */
+function backupJSON(){
+  const data = {cfg:getCfg(), hist:getHist(), version:2, fecha:new Date().toISOString()};
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'respaldo_nomina_decasa_' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+function restoreJSON(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(data.cfg) localStorage.setItem(LS_CFG, JSON.stringify(data.cfg));
+      if(data.hist) localStorage.setItem(LS_HIST, JSON.stringify(data.hist));
+      alert('Respaldo restaurado ✔');
+      location.reload();
+    }catch(err){ alert('Archivo inválido.'); }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- UTILS ---------- */
+function limpiar(){
+  if(!confirm('¿Limpiar todos los campos de esta semana?')) return;
+  ['ventaSaint','costoSaint','utilPctSaint','tasaBCV','tasaUSDT'].forEach(id=>{
+    document.getElementById(id).value = '';
+  });
+  getCfg().forEach((e,i)=>{
+    ['venta_','faltas_','bono_'].forEach(p=>{
+      const el = document.getElementById(p+i);
+      if(el) el.value = '';
+    });
+    (e.extras||[]).forEach((ex,j)=>{
+      const el = document.getElementById('extra_'+i+'_'+j);
+      if(el) el.value = '';
+    });
+  });
+  calc();
+}
+
+/* ---------- INIT ---------- */
+(function(){
+  const hoy = new Date();
+  const dow = hoy.getDay();
+  const lunes = new Date(hoy); lunes.setDate(hoy.getDate() - ((dow+6)%7));
+  const domingo = new Date(lunes); domingo.setDate(lunes.getDate()+6);
+  const iso = d=> d.toISOString().slice(0,10);
+  document.getElementById('fDesde').value = iso(lunes);
+  document.getElementById('fHasta').value = iso(domingo);
+  renderEmpInputs();
+  calc();
+})();
+</script>
+</body>
+</html>
