@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resumen Gastos Ezzio</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 12px;
+            color: #333;
+        }
+        .container { max-width: 100%; margin: 0 auto; }
+        
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .header p { font-size: 12px; opacity: 0.9; }
+        
+        /* FORM */
+        .form-card {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #555;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-add {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-add:active { background: #5568d3; }
+        
+        .btn-export {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .btn-export:active { background: #38a169; }
+        
+        /* RESUMEN */
+        .summary-header {
+            background: #2d3748;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px 12px 0 0;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        
+        .summary-box {
+            background: white;
+            border-radius: 0 0 12px 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 16px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        
+        .stat-box {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .stat-label { font-size: 11px; color: #999; font-weight: 600; }
+        .stat-value { font-size: 18px; font-weight: 700; color: #667eea; margin-top: 4px; }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 13px;
+        }
+        
+        .summary-row:last-child { border-bottom: none; }
+        .summary-label { font-weight: 600; }
+        .summary-value { font-weight: 700; color: #667eea; }
+        
+        .total-row {
+            border-top: 2px solid #e2e8f0;
+            padding-top: 12px;
+            margin-top: 12px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        
+        /* LISTA DE GASTOS */
+        .list-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        
+        .list-header {
+            background: #f7fafc;
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+            display: grid;
+            grid-template-columns: 0.6fr 0.8fr 1.2fr 0.6fr 0.6fr 40px;
+            gap: 6px;
+            font-weight: 600;
+            font-size: 10px;
+            color: #555;
+        }
+        
+        .list-item {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            display: grid;
+            grid-template-columns: 0.6fr 0.8fr 1.2fr 0.6fr 0.6fr 40px;
+            gap: 6px;
+            align-items: center;
+            font-size: 11px;
+        }
+        
+        .list-item:last-child { border-bottom: none; }
+        .list-item:hover { background: #f9fafb; }
+        
+        .cat-tag {
+            display: inline-block;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .cat-casa { background: #bee3f8; color: #2c5282; }
+        .cat-doral { background: #feebc8; color: #7c2d12; }
+        .cat-depot { background: #c6f6d5; color: #22543d; }
+        .cat-vz { background: #fbd38d; color: #975a16; }
+        .cat-ingreso { background: #d6f5d6; color: #22543d; }
+        
+        .amount { font-weight: 700; color: #667eea; }
+        .amount.ingreso { color: #48bb78; }
+        
+        .delete-btn {
+            background: #f56565;
+            color: white;
+            border: none;
+            padding: 2px 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+        
+        .delete-btn:active { background: #e53e3e; }
+        
+        .empty {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 12px;
+        }
+        
+        .month-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .month-btn {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            background: #f7fafc;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .month-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>💰 Resumen Gastos</h1>
+            <p id="currentMonth">Agosto 2026</p>
+        </div>
+        
+        <!-- FORM INGRESAR GASTO -->
+        <div class="form-card">
+            <div class="form-group">
+                <label>Categoría</label>
+                <select id="categoria">
+                    <option value="">-- Selecciona --</option>
+                    <option value="Gastos Casa">Gastos Casa</option>
+                    <option value="Gastos Doral 79">Gastos Doral 79</option>
+                    <option value="Gastos Decasa Depot">Gastos Decasa Depot</option>
+                    <option value="Gastos Decasa Venezuela">Gastos Decasa Venezuela</option>
+                    <option value="Ingresos">Ingresos</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Tienda / Origen</label>
+                <input type="text" id="tienda" placeholder="ej: Publix, Amazon, Liberty Express">
+            </div>
+            
+            <div class="form-group">
+                <label>Concepto</label>
+                <input type="text" id="concepto" placeholder="ej: Mercado, Renta, Comisión">
+            </div>
+            
+            <div class="form-group">
+                <label>Monto</label>
+                <input type="number" id="monto" placeholder="0.00" step="0.01">
+            </div>
+            
+            <div class="form-group">
+                <label>Fecha</label>
+                <input type="date" id="fecha">
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-add" onclick="agregarGasto()">➕ Agregar</button>
+                <button class="btn-export" onclick="exportarCSV()">📥 Export</button>
+            </div>
+        </div>
+        
+        <!-- SELECTOR DE MES -->
+        <div class="month-selector">
+            <button class="month-btn" onclick="cambiarMes('2026-06')">Junio</button>
+            <button class="month-btn" onclick="cambiarMes('2026-07')">Julio</button>
+            <button class="month-btn active" onclick="cambiarMes('2026-08')">Agosto</button>
+        </div>
+        
+        <!-- RESUMEN -->
+        <div class="summary-header">📊 Resumen del Mes</div>
+        <div class="summary-box">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label">Casa</div>
+                    <div class="stat-value" id="totalCasa">$0.00</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Doral 79</div>
+                    <div class="stat-value" id="totalDoral">$0.00</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Depot</div>
+                    <div class="stat-value" id="totalDepot">$0.00</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Venezuela</div>
+                    <div class="stat-value" id="totalVenezuela">$0.00</div>
+                </div>
+            </div>
+            
+            <div class="summary-row">
+                <span class="summary-label">Total Gastos:</span>
+                <span class="summary-value" id="totalGastos">$0.00</span>
+            </div>
+            
+            <div class="summary-row">
+                <span class="summary-label">Total Ingresos:</span>
+                <span class="summary-value ingreso" id="totalIngresos">$0.00</span>
+            </div>
+            
+            <div class="summary-row total-row">
+                <span class="summary-label">SALDO NETO:</span>
+                <span class="summary-value" id="saldoNeto">$0.00</span>
+            </div>
+        </div>
+        
+        <!-- LISTA DE GASTOS -->
+        <div class="summary-header">📋 Transacciones del Mes</div>
+        <div class="list-card">
+            <div class="list-header">
+                <div>Cat.</div>
+                <div>Tienda</div>
+                <div>Concepto</div>
+                <div>Fecha</div>
+                <div>Monto</div>
+                <div></div>
+            </div>
+            <div id="listado"></div>
+            <div id="emptyMessage" class="empty">No hay transacciones</div>
+        </div>
+    </div>
+    
+    <script>
+        const DATOS_HISTORICOS = [
+            {categoria:"Gastos Casa",tienda:"Publix Downtown Doral",concepto:"Mercado",monto:45.67,fecha:"2026-06-01"},
+            {categoria:"Gastos Casa",tienda:"Chevron",concepto:"Gasolina",monto:58.90,fecha:"2026-06-02"},
+            {categoria:"Gastos Casa",tienda:"FPL",concepto:"Luz",monto:248.50,fecha:"2026-06-05"},
+            {categoria:"Gastos Casa",tienda:"Amazon",concepto:"Cables HDMI",monto:29.99,fecha:"2026-06-07"},
+            {categoria:"Gastos Casa",tienda:"Sam's Club",concepto:"Mercado",monto:127.45,fecha:"2026-06-10"},
+            {categoria:"Gastos Casa",tienda:"HomeDepot",concepto:"Materiales",monto:89.32,fecha:"2026-06-12"},
+            {categoria:"Gastos Casa",tienda:"CVS Pharmacy",concepto:"Medicinas",monto:34.56,fecha:"2026-06-15"},
+            {categoria:"Gastos Casa",tienda:"Allstate",concepto:"Seguro Auto",monto:179.29,fecha:"2026-06-20"},
+            {categoria:"Gastos Casa",tienda:"Wawa",concepto:"Gasolina",monto:65.00,fecha:"2026-06-22"},
+            {categoria:"Gastos Casa",tienda:"Costco",concepto:"Mercado",monto:156.78,fecha:"2026-06-25"},
+            {categoria:"Gastos Casa",tienda:"Foot Locker",concepto:"Zapatos",monto:95.00,fecha:"2026-06-28"},
+            {categoria:"Gastos Casa",tienda:"Amazon",concepto:"Audífonos",monto:49.99,fecha:"2026-06-30"},
+            {categoria:"Gastos Doral 79",tienda:"Alhambra Business Center",concepto:"Renta",monto:2059.80,fecha:"2026-06-01"},
+            {categoria:"Gastos Doral 79",tienda:"FPL",concepto:"Luz",monto:198.75,fecha:"2026-06-15"},
+            {categoria:"Gastos Doral 79",tienda:"ADT",concepto:"Seguridad",monto:56.70,fecha:"2026-06-20"},
+            {categoria:"Gastos Doral 79",tienda:"Contabilidad",concepto:"Pago",monto:225.00,fecha:"2026-06-25"},
+            {categoria:"Gastos Casa",tienda:"7-Eleven",concepto:"Café",monto:12.50,fecha:"2026-07-01"},
+            {categoria:"Gastos Casa",tienda:"Publix",concepto:"Mercado",monto:87.34,fecha:"2026-07-03"},
+            {categoria:"Gastos Casa",tienda:"Chevron",concepto:"Gasolina",monto:62.00,fecha:"2026-07-05"},
+            {categoria:"Gastos Casa",tienda:"FPL",concepto:"Luz",monto:266.80,fecha:"2026-07-10"},
+            {categoria:"Gastos Casa",tienda:"Amazon",concepto:"Libro",monto:15.99,fecha:"2026-07-12"},
+            {categoria:"Gastos Casa",tienda:"Costco",concepto:"Mercado",monto:189.45,fecha:"2026-07-15"},
+            {categoria:"Gastos Casa",tienda:"CVS",concepto:"Vitaminas",monto:28.99,fecha:"2026-07-18"},
+            {categoria:"Gastos Casa",tienda:"Nike Store",concepto:"Ropa deportiva",monto:125.00,fecha:"2026-07-20"},
+            {categoria:"Gastos Casa",tienda:"Wawa",concepto:"Gasolina",monto:70.00,fecha:"2026-07-22"},
+            {categoria:"Gastos Casa",tienda:"Sam's Club",concepto:"Mercado",monto:143.67,fecha:"2026-07-25"},
+            {categoria:"Gastos Doral 79",tienda:"Alhambra Business Center LLC",concepto:"Renta",monto:2059.80,fecha:"2026-07-01"},
+            {categoria:"Gastos Doral 79",tienda:"FPL",concepto:"Luz",monto:202.17,fecha:"2026-07-15"},
+            {categoria:"Gastos Doral 79",tienda:"ADT",concepto:"Seguridad",monto:56.70,fecha:"2026-07-29"},
+            {categoria:"Gastos Doral 79",tienda:"Contabilidad",concepto:"Pago",monto:225.00,fecha:"2026-07-31"},
+            {categoria:"Gastos Casa",tienda:"7-Eleven Doral",concepto:"Bebida y cigarros",monto:24.90,fecha:"2026-08-01"},
+            {categoria:"Gastos Casa",tienda:"Piccolla",concepto:"Cena",monto:166.00,fecha:"2026-08-01"},
+            {categoria:"Gastos Casa",tienda:"Chevron",concepto:"Gasolina",monto:62.96,fecha:"2026-08-03"},
+            {categoria:"Gastos Casa",tienda:"Miami-Dade County",concepto:"Agua trimestre",monto:332.80,fecha:"2026-08-07"},
+            {categoria:"Gastos Casa",tienda:"Allstate",concepto:"Póliza Auto",monto:179.29,fecha:"2026-08-13"},
+            {categoria:"Gastos Casa",tienda:"Martinez Distributors",concepto:"Arepas y carnes",monto:116.34,fecha:"2026-08-02"},
+            {categoria:"Gastos Casa",tienda:"Sam's Club",concepto:"Mercado",monto:153.75,fecha:"2026-08-02"},
+            {categoria:"Gastos Casa",tienda:"Publix Downtown Doral",concepto:"Mercado",monto:51.83,fecha:"2026-08-02"},
+            {categoria:"Gastos Casa",tienda:"Costco Wholesale",concepto:"Mercado",monto:40.85,fecha:"2026-08-02"},
+            {categoria:"Gastos Casa",tienda:"Publix Downtown Doral",concepto:"Mercado",monto:56.56,fecha:"2026-08-07"},
+            {categoria:"Gastos Casa",tienda:"Wawa",concepto:"Gasolina",monto:70.00,fecha:"2026-08-11"},
+            {categoria:"Gastos Casa",tienda:"MJ Diaz Law PA",concepto:"Trámite I-485",monto:2000.00,fecha:"2026-08-12"},
+            {categoria:"Gastos Casa",tienda:"FPL",concepto:"Luz",monto:255.00,fecha:"2026-08-15"},
+            {categoria:"Gastos Doral 79",tienda:"Alhambra Business Center LLC",concepto:"Renta",monto:2059.80,fecha:"2026-08-01"},
+            {categoria:"Gastos Doral 79",tienda:"Comcast-Xfinity",concepto:"Internet",monto:119.91,fecha:"2026-08-10"},
+            {categoria:"Gastos Doral 79",tienda:"FPL",concepto:"Luz",monto:251.00,fecha:"2026-08-15"},
+            {categoria:"Gastos Decasa Depot",tienda:"Costco Wholesale",concepto:"Mercancía",monto:967.75,fecha:"2026-08-01"}
+        ];
+        
+        let mesActual = '2026-08';
+        
+        // Inicializar fecha actual
+        document.getElementById('fecha').valueAsDate = new Date();
+        
+        // Cargar datos históricos al localStorage si no existen
+        function inicializarDatos() {
+            if (!localStorage.getItem('gastos')) {
+                localStorage.setItem('gastos', JSON.stringify(DATOS_HISTORICOS));
+            }
+        }
+        
+        inicializarDatos();
+        cargarGastos();
+        
+        function cambiarMes(mes) {
+            mesActual = mes;
+            document.querySelectorAll('.month-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const meses = {
+                '2026-06': 'Junio',
+                '2026-07': 'Julio',
+                '2026-08': 'Agosto'
+            };
+            document.getElementById('currentMonth').textContent = meses[mes] + ' 2026';
+            cargarGastos();
+        }
+        
+        function agregarGasto() {
+            const categoria = document.getElementById('categoria').value;
+            const tienda = document.getElementById('tienda').value;
+            const concepto = document.getElementById('concepto').value;
+            const monto = parseFloat(document.getElementById('monto').value);
+            const fecha = document.getElementById('fecha').value;
+            
+            if (!categoria || !tienda || !concepto || !monto || !fecha) {
+                alert('⚠️ Llena todos los campos');
+                return;
+            }
+            
+            let gastos = JSON.parse(localStorage.getItem('gastos')) || [];
+            gastos.push({ categoria, tienda, concepto, monto, fecha, id: Date.now() });
+            localStorage.setItem('gastos', JSON.stringify(gastos));
+            
+            alert('✅ Gasto agregado');
+            limpiarFormulario();
+            cargarGastos();
+        }
+        
+        function limpiarFormulario() {
+            document.getElementById('categoria').value = '';
+            document.getElementById('tienda').value = '';
+            document.getElementById('concepto').value = '';
+            document.getElementById('monto').value = '';
+            document.getElementById('fecha').valueAsDate = new Date();
+        }
+        
+        function cargarGastos() {
+            let gastos = JSON.parse(localStorage.getItem('gastos')) || [];
+            const filtrados = gastos.filter(g => g.fecha.startsWith(mesActual));
+            
+            const listado = document.getElementById('listado');
+            const emptyMessage = document.getElementById('emptyMessage');
+            
+            if (filtrados.length === 0) {
+                listado.innerHTML = '';
+                emptyMessage.style.display = 'block';
+                calcularTotales([]);
+                return;
+            }
+            
+            emptyMessage.style.display = 'none';
+            filtrados.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            listado.innerHTML = filtrados.map(g => `
+                <div class="list-item">
+                    <div><span class="cat-tag ${getCategoryClass(g.categoria)}">${getCategoryShort(g.categoria)}</span></div>
+                    <div>${g.tienda}</div>
+                    <div>${g.concepto}</div>
+                    <div>${g.fecha}</div>
+                    <div class="amount ${g.categoria.includes('Ingreso') ? 'ingreso' : ''}">$${g.monto.toFixed(2)}</div>
+                    <button class="delete-btn" onclick="eliminarGasto(${g.id})">X</button>
+                </div>
+            `).join('');
+            
+            calcularTotales(filtrados);
+        }
+        
+        function getCategoryShort(cat) {
+            if (cat.includes('Casa')) return 'Casa';
+            if (cat.includes('Doral')) return 'D79';
+            if (cat.includes('Depot')) return 'Depot';
+            if (cat.includes('Venezuela')) return 'VZ';
+            return 'Ing';
+        }
+        
+        function getCategoryClass(cat) {
+            if (cat.includes('Casa')) return 'cat-casa';
+            if (cat.includes('Doral')) return 'cat-doral';
+            if (cat.includes('Depot')) return 'cat-depot';
+            if (cat.includes('Venezuela')) return 'cat-vz';
+            return 'cat-ingreso';
+        }
+        
+        function eliminarGasto(id) {
+            if (!confirm('¿Eliminar?')) return;
+            let gastos = JSON.parse(localStorage.getItem('gastos')) || [];
+            gastos = gastos.filter(g => g.id !== id);
+            localStorage.setItem('gastos', JSON.stringify(gastos));
+            cargarGastos();
+        }
+        
+        function calcularTotales(gastos) {
+            const totales = {
+                'Casa': 0,
+                'Doral 79': 0,
+                'Depot': 0,
+                'Venezuela': 0,
+                'Ingresos': 0
+            };
+            
+            let totalGastos = 0, totalIngresos = 0;
+            
+            gastos.forEach(g => {
+                if (g.categoria.includes('Ingreso')) {
+                    totales['Ingresos'] += g.monto;
+                    totalIngresos += g.monto;
+                } else {
+                    totalGastos += g.monto;
+                    if (g.categoria.includes('Casa')) totales['Casa'] += g.monto;
+                    else if (g.categoria.includes('Doral')) totales['Doral 79'] += g.monto;
+                    else if (g.categoria.includes('Depot')) totales['Depot'] += g.monto;
+                    else if (g.categoria.includes('Venezuela')) totales['Venezuela'] += g.monto;
+                }
+            });
+            
+            document.getElementById('totalCasa').textContent = '$' + totales['Casa'].toFixed(2);
+            document.getElementById('totalDoral').textContent = '$' + totales['Doral 79'].toFixed(2);
+            document.getElementById('totalDepot').textContent = '$' + totales['Depot'].toFixed(2);
+            document.getElementById('totalVenezuela').textContent = '$' + totales['Venezuela'].toFixed(2);
+            
+            document.getElementById('totalGastos').textContent = '$' + totalGastos.toFixed(2);
+            document.getElementById('totalIngresos').textContent = '$' + totalIngresos.toFixed(2);
+            
+            const saldo = totalIngresos - totalGastos;
+            document.getElementById('saldoNeto').textContent = '$' + saldo.toFixed(2);
+        }
+        
+        function exportarCSV() {
+            let gastos = JSON.parse(localStorage.getItem('gastos')) || [];
+            const filtrados = gastos.filter(g => g.fecha.startsWith(mesActual));
+            
+            if (filtrados.length === 0) {
+                alert('No hay transacciones para exportar');
+                return;
+            }
+            
+            let csv = 'Categoría,Tienda,Concepto,Monto,Fecha\n';
+            filtrados.forEach(g => {
+                csv += `"${g.categoria}","${g.tienda}","${g.concepto}",${g.monto},"${g.fecha}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `gastos_${mesActual}.csv`;
+            link.click();
+        }
+    </script>
+</body>
+</html>
